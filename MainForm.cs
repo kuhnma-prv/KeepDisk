@@ -1,14 +1,9 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
+using System.Configuration;
 using System.IO;
-using System.Linq;
-using System.Security.Principal;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
+using System.DirectoryServices.AccountManagement;
+using System.Diagnostics;
 
 namespace KeepDisk
 {
@@ -17,8 +12,14 @@ namespace KeepDisk
         public MainForm()
         {
             InitializeComponent();
+
+            int.TryParse(ConfigurationManager.AppSettings["CheckInterval"] ?? "5", System.Globalization.NumberStyles.Integer, null, out var checkInterval);
+
+            var userName = UserPrincipal.Current.DisplayName ?? Environment.UserName;
+            _timer.Interval = checkInterval * 1000;
+
             var f = new FileInfo(Application.ExecutablePath);
-            _notifyIcon.BalloonTipText = $"Hallo {Environment.UserName}\nIch prüfe das Laufwerk {f.Directory.Root} alle 5 Sekunden.";
+            _notifyIcon.BalloonTipText = $"Hallo {userName}\nIch prüfe das Laufwerk {f.Directory.Root} alle {checkInterval} Sekunden.";
         }
 
         private void OnExitApp(object sender, EventArgs e)
@@ -29,12 +30,12 @@ namespace KeepDisk
         private void OnCheckDisk(object sender, EventArgs e)
         {
             var f = new FileInfo(Application.ExecutablePath);
-            Console.WriteLine(f.Exists);
+            Debug.WriteLine(f.Exists);
         }
 
         private void ShowBallon(object sender, MouseEventArgs e)
         {
-            if(e.Button == MouseButtons.Left)
+            if (e.Button == MouseButtons.Left)
                 _notifyIcon.ShowBalloonTip(5000);
         }
     }
